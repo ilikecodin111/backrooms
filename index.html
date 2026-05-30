@@ -54,17 +54,28 @@ let chasePlaying = false;
 const wallTexture = new Image();
 const exitTexture = new Image();
 const enemyTexture = new Image();
-
+const specialTexture = new Image();
 exitTexture.onload = () => {
     console.log("exit loaded");
 };
-
+specialTexture.onload = () => {
+    console.log("props loaded");
+};
 enemyTexture.onload = () => {
     console.log("enemy loaded");
 };
+specialTexture.src = "gate.png";
 
 exitTexture.src = "Exit_Door.png";
-
+specialTexture.onload = () => {
+    console.log("loaded:", specialTexture.width, specialTexture.height);
+};
+specialTexture.onerror = () => {
+    console.log("FAILED TO LOAD");
+};
+specialTexture.onerror = () => {
+    console.log("FAILED:", specialTexture.src);
+};
 // =======================
 // LEVELS
 // =======================
@@ -72,6 +83,9 @@ const levels = [
 {
     wall:"walls.png",
     enemy:"bacteria.png",
+    special:"almondwater.png",
+    specialSolid: false,
+
     enemyStart:{x:7.5,y:4.5},
     map:[
         [1,1,1,1,1,1,1,1,1,1],
@@ -79,18 +93,20 @@ const levels = [
         [1,0,1,1,0,1,1,0,0,1],
         [1,0,0,1,0,0,1,0,0,1],
         [1,0,0,1,0,0,1,0,0,1],
-        [1,0,0,0,0,1,0,0,3,1],
+        [1,4,0,0,0,1,0,0,3,1],
         [1,1,1,1,1,1,1,1,1,1]
     ]
 },
 {
     wall:"walls2.png",
+    special:"frowner.png",
     enemy:"smiler.png",
+    specialSolid: false,
     enemyStart:{x:8.5,y:2.5},
     map:[
         [1,1,1,1,1,1,1,1,1,1],
         [1,2,0,1,0,0,0,0,0,1],
-        [1,0,0,1,0,1,1,1,0,1],
+        [1,0,0,1,0,1,1,4,0,1],
         [1,1,0,0,0,0,0,1,0,1],
         [1,0,0,1,1,1,0,1,0,1],
         [1,0,0,0,0,0,0,0,3,1],
@@ -100,6 +116,9 @@ const levels = [
 {
     wall:"walls3.png",
     enemy:"herobrine.png",
+    special:"craftingtable.png",
+    specialSolid: false,
+
     enemyStart:{x:8.5,y:2.5},
     map:[
         [1,1,1,1,1,1,1,1,1,1],
@@ -107,7 +126,7 @@ const levels = [
         [1,1,1,1,1,0,0,1,0,1],
         [1,0,0,0,0,0,0,0,0,1],
         [1,0,1,0,0,1,1,1,1,1],
-        [1,0,0,0,0,0,0,0,3,1],
+        [1,4,0,0,0,0,0,0,3,1],
         [1,1,1,1,1,1,1,1,1,1]
     ],
     
@@ -115,10 +134,12 @@ const levels = [
 {
     wall:"walls4.png",
     enemy:"butcher.png",
+    specialSolid: false,
+    special:"skull.png",
     enemyStart:{x:8.5,y:2.5},
     map:[
         [1,1,1,1,1,1,1,1,1,1],
-        [1,2,0,0,0,1,0,1,0,1],
+        [1,2,0,0,4,1,0,1,0,1],
         [1,0,0,0,0,1,0,1,0,1],
         [1,0,0,0,0,1,0,0,0,1],
         [1,0,0,0,0,1,0,1,1,1],
@@ -168,15 +189,31 @@ const enemies = [];
 // =======================
 // LOAD LEVEL
 // =======================
+let hasSpecial = false;
+let specialSolid = true;
 function loadLevel(levelIndex){
+
+
+
+
     currentLevel = levelIndex;
     const level = levels[levelIndex];
 
     map = level.map;
 
-    // load textures
     wallTexture.src = level.wall;
     enemyTexture.src = level.enemy;
+
+    hasSpecial = !!level.special;
+    specialSolid = level.specialSolid ?? true;
+
+    if(hasSpecial){
+        specialTexture.src = level.special;
+    }
+
+
+
+
 
     // reset player
     for(let y=0;y<map.length;y++){
@@ -213,24 +250,49 @@ window.addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
 // RAYCASTING
 // =======================
 function castSingleRay(angle){
-    let x=player.x;
-    let y=player.y;
-    let dist=0;
-    const step=0.05;
 
-    while(dist<20){
-        x+=Math.cos(angle)*step;
-        y+=Math.sin(angle)*step;
-        dist+=step;
+let x = player.x;
+let y = player.y;
 
-        if(map[Math.floor(y)]?.[Math.floor(x)]===1){
-            return {distance:dist};
-        }
+let dist = 0;
+
+const step = 0.05;
+
+while(dist < 20){
+
+    x += Math.cos(angle)*step;
+    y += Math.sin(angle)*step;
+
+    dist += step;
+
+    const tile =
+        map[Math.floor(y)]
+        ?.[Math.floor(x)];
+
+    // normal wall
+    if(tile === 1){
+        return {
+            distance:dist,
+            tile:1
+        };
     }
 
-    return {distance:20};
+    // special render (solid OR not solid)
+    if(tile === 4 && hasSpecial && specialSolid){
+    return {
+        distance: dist,
+        tile: 4
+    };
 }
 
+}
+
+return {
+    distance:20,
+    tile:0
+};
+
+}
 function castRays(){
     const rays=[];
     const numRays=canvas.width;
@@ -270,10 +332,16 @@ function updatePlayer(){
     const nx=player.x+dx;
     const ny=player.y+dy;
 
-    if(map[Math.floor(ny)]?.[Math.floor(nx)]!==1){
-        player.x=nx;
-        player.y=ny;
-    }
+    const tile = map[Math.floor(ny)]?.[Math.floor(nx)];
+
+    const blocked =
+    tile === 1 ||
+    (tile === 4 && specialSolid);
+
+if(!blocked){
+    player.x = nx;
+    player.y = ny;
+}
 
     if(map[Math.floor(player.y)][Math.floor(player.x)]===3){
 
@@ -334,21 +402,29 @@ enemies.forEach(enemy=>{
         let moveY =
             (dy/dist)*0.025;
 
-        if(
-            map[Math.floor(enemy.y)]
-            ?.[Math.floor(enemy.x+moveX)]
-            !==1
-        ){
-            enemy.x+=moveX;
-        }
+            const tileX =
+map[Math.floor(enemy.y)]
+?.[Math.floor(enemy.x+moveX)];
 
-        if(
-            map[Math.floor(enemy.y+moveY)]
-            ?.[Math.floor(enemy.x)]
-            !==1
-        ){
-            enemy.y+=moveY;
-        }
+const blockedX =
+    tileX === 1 ||
+    (tileX === 4 && specialSolid);
+
+if(!blockedX){
+    enemy.x += moveX;
+}
+
+        const tileY =
+map[Math.floor(enemy.y+moveY)]
+?.[Math.floor(enemy.x)];
+
+const blockedY =
+    tileY === 1 ||
+    (tileY === 4 && specialSolid);
+
+if(!blockedY){
+    enemy.y += moveY;
+}
 
     }
 
@@ -404,22 +480,33 @@ if(!close&&chasePlaying){
 // RENDER
 // =======================
 function render3D(rays){
-    const sliceWidth=canvas.width/rays.length;
 
-    rays.forEach((ray,i)=>{
-        const corrected=ray.distance*Math.cos(ray.angle-player.angle);
-        const wallHeight=canvas.height/corrected;
+const sliceWidth =
+canvas.width / rays.length;
 
-        ctx.drawImage(
-            wallTexture,
-            i*sliceWidth,
-            canvas.height/2-wallHeight/2,
-            sliceWidth+1,
-            wallHeight
-        );
-    });
+rays.forEach((ray,i)=>{
+
+    const corrected =
+        ray.distance *
+        Math.cos(ray.angle-player.angle);
+
+    const wallHeight =
+        canvas.height /
+        corrected;
+
+        let texture = wallTexture;
+
+    ctx.drawImage(
+        texture,
+        i * sliceWidth,
+        canvas.height/2-wallHeight/2,
+        sliceWidth + 1,
+        wallHeight
+    );
+
+});
+
 }
-
 
 // =======================
 // SPRITES
@@ -428,50 +515,58 @@ function drawSprites(rays){
 
 enemies.forEach(enemy=>{
 
-    const dx = enemy.x - player.x;
-    const dy = enemy.y - player.y;
+const dx = enemy.x-player.x;
+const dy = enemy.y-player.y;
 
-    const dist = Math.sqrt(dx*dx + dy*dy);
+const dist =
+Math.sqrt(dx*dx+dy*dy);
 
-    let angle = Math.atan2(dy, dx) - player.angle;
+let angle =
+Math.atan2(dy,dx)
+-player.angle;
 
-    // wrap angle
-    angle = ((angle + Math.PI) % (Math.PI * 2)) - Math.PI;
+angle =
+((angle+Math.PI)
+%(Math.PI*2))
+-Math.PI;
 
-    if(Math.abs(angle) < player.fov / 2){
+if(Math.abs(angle)<player.fov/2){
 
-        const size = canvas.height / dist;
+const screenX =
+((angle+player.fov/2)
+/player.fov)
+*canvas.width;
 
-        const screenX =
-            ((angle + player.fov/2) / player.fov)
-            * canvas.width;
+const rayIndex =
+Math.floor(screenX);
 
-        const rayIndex =
-            Math.floor(screenX);
+if(
+rayIndex>=0 &&
+rayIndex<rays.length &&
+dist<rays[rayIndex].distance
+){
 
-        if(
-            rayIndex >= 0 &&
-            rayIndex < rays.length &&
-            dist < rays[rayIndex].distance
-        ){
-            ctx.drawImage(
-                enemyTexture,
-                screenX-size/2,
-                canvas.height/2-size/2,
-                size,
-                size
-            );
-        }
-    }
+const size =
+canvas.height/dist;
 
-});
+ctx.drawImage(
+enemyTexture, // ← FIX
+screenX-size/2,
+canvas.height/2-size/2,
+size,
+size
+);
 
 }
 
-// =======================
-// EXIT
+}
+
+});
+
+}// EXIT
 // =======================
 function drawExit(rays){
+    
     for(let y=0;y<map.length;y++){
         for(let x=0;x<map[y].length;x++){
 
@@ -503,8 +598,76 @@ function drawExit(rays){
     }
 }
 
+function drawSpecial(rays){
 
-// =======================
+if(
+!hasSpecial ||
+!specialTexture.complete ||
+specialTexture.naturalWidth === 0
+) return;
+
+for(let y=0;y<map.length;y++){
+for(let x=0;x<map[y].length;x++){
+
+if(map[y][x] !== 4) continue;
+
+const dx = x+0.5-player.x;
+const dy = y+0.5-player.y;
+
+const dist =
+Math.sqrt(dx*dx+dy*dy);
+
+let angle =
+Math.atan2(dy,dx)
+-player.angle;
+
+angle =
+((angle+Math.PI)%
+(Math.PI*2))
+-Math.PI;
+
+if(Math.abs(angle)>=player.fov/2)
+continue;
+
+const screenX =
+((angle+player.fov/2)
+/player.fov)
+*canvas.width;
+
+const rayIndex =
+Math.floor(screenX);
+
+if(
+rayIndex < 0 ||
+rayIndex >= rays.length
+){
+continue;
+}
+
+// WALL IS CLOSER → DON'T DRAW
+if(
+dist >
+rays[rayIndex].distance
+){
+continue;
+}
+
+const size =
+canvas.height/dist;
+
+ctx.drawImage(
+specialTexture,
+screenX-size/2,
+canvas.height/2-size/2,
+size,
+size
+);
+
+}
+
+}
+
+}// =======================
 // LOOP
 // =======================
 function gameLoop(){
@@ -514,10 +677,13 @@ function gameLoop(){
     updateEnemies();
 
     const rays=castRays();
-
     render3D(rays);
+drawSpecial(rays);
+if(hasSpecial && !specialSolid){
     drawExit(rays);
-    drawSprites(rays);
+}
+drawSprites(rays);
+   
 
     drawMiniMap(ctx, map, player, rays, enemies);
 
