@@ -690,9 +690,15 @@ sounds.levelClear.currentTime=0;
 sounds.levelClear.play();
 
 loreUnlocked[currentLevel]=true;
+if(currentLevel + 1 === 0){
 
 }
+loadLevel(currentLevel+1);
+
 }
+
+}
+
 }// =======================
 // ENEMY AI
 // =======================
