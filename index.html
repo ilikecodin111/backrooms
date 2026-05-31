@@ -57,6 +57,16 @@ let jumpscareStart = 0;
 let currentJumpscareImg = new Image();
 let cheatInput = "";
 let cheatUnlocked = false;
+let bobTime = 0;
+let cameraBob = 0;
+
+let sway = 0;
+let swayTarget = 0;
+
+let flashlightOn = true;
+let darkLevel = true;
+
+let darkLevelsEnabled = true;
 // =======================
 // TEXTURES
 // =======================
@@ -94,7 +104,6 @@ const levels = [
     enemy:"bacteria.png",
     special:"almondwater.png",
     specialSolid: false,
-
     enemyStart:{x:7.5,y:4.5},
     map:[
         [1,1,1,1,1,1,1,1,1,1],
@@ -177,6 +186,8 @@ const levels = [
     enemy:"partygoer.png",
     enemyStart:{x:13,y:3},
     enemyPower:"phase",
+    specialSolid: false,
+    special:"party.png",
     map: [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     [1,4,0,0,0,0,0,2,0,0,1,0,0,0,1],
@@ -199,6 +210,8 @@ const levels = [
 {
     wall:"walls.png",
     enemy:"partygoer.png",
+    specialSolid: false,
+    special:"party.png",
     enemyStart:{x:13,y:1.5},
     enemyPower:"watcher-blink",
     map: [
@@ -226,7 +239,9 @@ const levels = [
     wall:"walls.png",
     enemy:"partygoer.png",
     enemyStart:{x:18.5,y:1.5},
-    enemyPower:"blink",
+    enemyPower:"phase",
+    specialSolid: false,
+    special:"party.png",
     map: [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     [1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -258,7 +273,7 @@ const levels = [
     enemy:"runforyourlife.png",
     enemyStart:{x:3.5,y:2.5},
     enemyPower:"speed",
-    specialSolid: true,
+    specialSolid: false,
     special:"obstacles.png",
     map: [
     
@@ -306,6 +321,123 @@ const levels = [
 
 
 ],
+
+    
+},
+{
+    wall:"walls6.png",
+    enemy:"runforyourlife.png",
+    enemyStart:{x:1.5,y:14.5},
+    enemyPower:"speed",
+    specialSolid: false,
+    special:"obstacles.png",
+    map: [
+    
+    
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+
+
+
+
+],
+
+    
+},
+{
+    wall:"bookshelf.png",
+    enemy:"statue.png",
+    enemyStart:{x:17.5,y:9.5},
+    enemyPower:"watcher",
+    specialSolid: false,
+    special:"desk.png",
+    map: [
+    
+    
+    
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1],
+    [1,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+
+
+
+],
+
     
 },
 ];
@@ -347,28 +479,31 @@ const loreText = [
     "Level 3: A mandela, deja vu, a place you've seen before.",
     "Level 4: It is proud.",
     "Level 5: Dreadful eyes stare.",
-    "Level FUN: Unlucky. The most deadly level.",
-    "Level FUN.1: Traverse your way through the madness or encounter a deadly suprise...",
-    "Level FUN.2: encountering powerful entitys which can walk through walls and move quick if you look away...",
-    "Level FUN.3: the last stretch the exit door nearing closer and closer to the next level...",
-    "Level RUN FOR YOUR LIFE: RUN!!!",
+    "Level 6 level FUN: lucky. The most safe level... :)",
+    "Level 7 level FUN: Traverse your way through the madness or encounter a deadly suprise...",
+    "Level 8 level FUN: encountering powerful entitys which can walk through walls and move quick if you look away...",
+    "Level 9 level FUN: the last stretch the exit door nearing closer and closer to the next level...",
+    "Level 10 RUN FOR YOUR LIFE: RUN!!!",
+    "Level 11 RUN FOR YOUR LIFE: Tons of entitys chase behind you every step feels like hell. the adreniline is wearing off. Hopefully I exit the level soon...",
 
 
 ];
 function loadLevel(levelIndex){
-
-
-
-
     currentLevel = levelIndex;
-    const level = levels[levelIndex];
 
+    const level = levels[levelIndex];
     map = level.map;
 
+    // lighting
+    darkLevel = level.dark ?? false;
+
+    // textures
     wallTexture.src = level.wall;
     enemyTexture.src = level.enemy;
+
     currentJumpscareImg = new Image();
-currentJumpscareImg.src = level.enemy; 
+    currentJumpscareImg.src = level.enemy;
+
     hasSpecial = !!level.special;
     specialSolid = level.specialSolid ?? true;
 
@@ -376,46 +511,47 @@ currentJumpscareImg.src = level.enemy;
         specialTexture.src = level.special;
     }
 
-
-
-
-
-    // reset player
+    // find spawn
     for(let y=0;y<map.length;y++){
         for(let x=0;x<map[y].length;x++){
-            if(map[y][x]===2){
+            if(map[y][x] === 2){
                 player.x = x + 0.5;
                 player.y = y + 0.5;
             }
         }
     }
 
-    // IMPORTANT
     player.angle = 0;
 
-    // reset enemy
+    // enemies reset
     enemies.length = 0;
 
     enemies.push({
-    x: level.enemyStart.x,
-    y: level.enemyStart.y,
-    power: level.enemyPower || null,
-    stuckTime: 0
-});
-}
+        x: level.enemyStart.x,
+        y: level.enemyStart.y,
+        power: level.enemyPower || null,
+        stuckTime: 0
+    });
 
-// =======================
-// INPUT
+    // reset effects
+    flashlightOn = true;
+    jumpscareActive = false;
+    playerDead = false;
+}// INPUT
 // =======================
 const keys={};
 
 window.addEventListener("keydown",e=>keys[e.key.toLowerCase()]=true);
 window.addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
 
-
+function isDarkLevel(){
+    const level = levels[currentLevel];
+    return level && level.dark && darkLevelsEnabled && gameState === "playing";
+}
 // =======================
 // RAYCASTING
 // =======================
+
 function castSingleRay(angle){
 
 let x = player.x;
@@ -423,12 +559,12 @@ let y = player.y;
 
 let dist = 0;
 
-const step = 0.05;
+const step = 0.03;
 
 while(dist < 20){
 
-    x += Math.cos(angle)*step;
-    y += Math.sin(angle)*step;
+    x += Math.cos(angle) * step;
+    y += Math.sin(angle) * step;
 
     dist += step;
 
@@ -436,34 +572,32 @@ while(dist < 20){
         map[Math.floor(y)]
         ?.[Math.floor(x)];
 
-    // normal wall
-    if(tile === 1){
+    if(tile === 1 || (tile === 4 && specialSolid)){
+
+        // exact hit position inside tile
+        const hitX = x - Math.floor(x);
+        const hitY = y - Math.floor(y);
+
         return {
-            distance:dist,
-            tile:1
+            distance: dist,
+            tile,
+            hitX,
+            hitY
         };
     }
-
-    // special render (solid OR not solid)
-    if(tile === 4 && hasSpecial && specialSolid){
-    return {
-        distance: dist,
-        tile: 4
-    };
-}
-
 }
 
 return {
     distance:20,
-    tile:0
+    tile:0,
+    hitX:0,
+    hitY:0
 };
 
-}
-function castRays(){
+}function castRays(){
     const rays=[];
-    const numRays=canvas.width;
-
+    const numRays =
+Math.floor(canvas.width/2);
     for(let i=0;i<numRays;i++){
         let angle=player.angle-player.fov/2+i*(player.fov/numRays);
         let hit=castSingleRay(angle);
@@ -479,71 +613,87 @@ function castRays(){
 // PLAYER MOVEMENT
 // =======================
 function updatePlayer(){
-    if(jumpscareActive) return;
-    const speed=0.05;
-    let dx=0,dy=0;
-    const moving = keys.w || keys.s;
-    if(keys.w){
-        
-        dx+=Math.cos(player.angle)*speed;
-        dy+=Math.sin(player.angle)*speed;
-    }
 
-    if(keys.s){
-        dx-=Math.cos(player.angle)*speed;
-        dy-=Math.sin(player.angle)*speed;
-    }
+if(jumpscareActive) return;
 
-    if(keys.a) player.angle-=0.04;
-    if(keys.d) player.angle+=0.04;
+const speed=0.05;
 
-    const nx=player.x+dx;
-    const ny=player.y+dy;
+let dx=0;
+let dy=0;
 
-    const tile = map[Math.floor(ny)]?.[Math.floor(nx)];
+if(keys.w){
+dx+=Math.cos(player.angle)*speed;
+dy+=Math.sin(player.angle)*speed;
+}
 
-    const blocked =
-    tile === 1 ||
-    (tile === 4 && specialSolid);
+if(keys.s){
+dx-=Math.cos(player.angle)*speed;
+dy-=Math.sin(player.angle)*speed;
+}
+
+if(keys.a) player.angle-=0.04;
+if(keys.d) player.angle+=0.04;
+
+const nx=player.x+dx;
+const ny=player.y+dy;
+
+const tile=
+map[Math.floor(ny)]
+?.[Math.floor(nx)];
+
+const blocked=
+tile===1||
+(tile===4&&specialSolid);
+
+const moving=(keys.w||keys.s)&&!blocked;
+
+// HEAD BOB
+if(moving){
+
+bobTime+=0.18;
+
+cameraBob=
+Math.sin(bobTime)*6;
+
+}else{
+
+cameraBob*=0.85;
+
+}
+
+// SWAY
+if(keys.a){
+swayTarget=-6;
+}
+else if(keys.d){
+swayTarget=6;
+}
+else{
+swayTarget=0;
+}
+
+sway+=(swayTarget-sway)*0.12;
 
 if(!blocked){
-    player.x = nx;
-    player.y = ny;
+
+player.x=nx;
+player.y=ny;
+
 }
 
-    if(map[Math.floor(player.y)][Math.floor(player.x)]===3){
+// EXIT
+if(map[Math.floor(player.y)][Math.floor(player.x)]===3){
 
-        if(currentLevel < levels.length-1){
-            sounds.levelClear.currentTime=0;
+if(currentLevel<levels.length-1){
+
+sounds.levelClear.currentTime=0;
 sounds.levelClear.play();
-loreUnlocked[currentLevel] = true;
-loadLevel(currentLevel+1);
-            
-        } else {
-            sounds.win.currentTime=0;
 
-sounds.win.play();
+loreUnlocked[currentLevel]=true;
 
-setTimeout(()=>{
-alert("YOU ESCAPED ALL LEVELS");
-},500);
-        }
-    }
-    // WALK SOUND
-if(moving && !walking){
-    walking = true;
-    sounds.walk.currentTime = 0;
-    sounds.walk.play().catch(()=>{});
-}
-
-if(!moving && walking){
-    walking = false;
-    sounds.walk.pause();
 }
 }
-
-
-// =======================
+}// =======================
 // ENEMY AI
 // =======================
 function triggerJumpscare(){
@@ -735,32 +885,76 @@ function render3D(rays){
 const sliceWidth =
 canvas.width / rays.length;
 
-rays.forEach((ray,i)=>{
+for(let i=0;i<rays.length;i++){
 
-    const corrected =
-        ray.distance *
-        Math.cos(ray.angle-player.angle);
+const ray = rays[i];
 
-    const wallHeight =
-        canvas.height /
-        corrected;
+if(ray.tile!==1)
+continue;
 
-        let texture = wallTexture;
+const corrected =
+ray.distance *
+Math.cos(
+ray.angle-player.angle
+);
 
-    ctx.drawImage(
-        texture,
-        i * sliceWidth,
-        canvas.height/2-wallHeight/2,
-        sliceWidth + 1,
-        wallHeight
-    );
+const wallHeight =
+canvas.height /
+Math.max(corrected,0.001);
 
-});
+// stable texture
+const texCoord =
+(ray.hitX<0.02||ray.hitX>0.98)
+? ray.hitY
+: ray.hitX;
+
+const texX =
+Math.floor(
+texCoord*
+wallTexture.width
+);
+
+ctx.drawImage(
+
+wallTexture,
+
+texX,
+0,
+1,
+wallTexture.height,
+
+i*sliceWidth,
+canvas.height/2-wallHeight/2,
+sliceWidth+1,
+wallHeight
+
+);
+
+// DISTANCE FOG
+const fog =
+Math.min(
+corrected/9,
+0.95
+);
+
+ctx.fillStyle=
+`rgba(0,0,0,${fog})`;
+
+ctx.fillRect(
+
+i*sliceWidth,
+
+canvas.height/2-wallHeight/2,
+
+sliceWidth+1,
+
+wallHeight
+
+);
 
 }
 
-// =======================
-// SPRITES
+}// SPRITES
 // =======================
 function drawSprites(rays){
 
@@ -769,53 +963,70 @@ enemies.forEach(enemy=>{
 const dx = enemy.x-player.x;
 const dy = enemy.y-player.y;
 
-const dist =
-Math.sqrt(dx*dx+dy*dy);
+const dist = Math.hypot(dx,dy);
 
 let angle =
-Math.atan2(dy,dx)
--player.angle;
+Math.atan2(dy,dx)-player.angle;
 
 angle =
-((angle+Math.PI)
-%(Math.PI*2))
--Math.PI;
-
-if(Math.abs(angle)<player.fov/2){
-
-const screenX =
-((angle+player.fov/2)
-/player.fov)
-*canvas.width;
-
-const rayIndex =
-Math.floor(screenX);
+Math.atan2(
+Math.sin(angle),
+Math.cos(angle)
+);
 
 if(
-rayIndex>=0 &&
-rayIndex<rays.length &&
-dist<rays[rayIndex].distance
-){
+Math.abs(angle) >
+player.fov/2
+) return;
+
+// screen position
+const screenX =
+(
+(angle+player.fov/2)
+/
+player.fov
+)
+*
+canvas.width;
+
+// FIX:
+// convert screen position → ray index
+const rayIndex =
+Math.floor(
+(screenX/canvas.width)
+*
+rays.length
+);
+
+if(
+rayIndex < 0 ||
+rayIndex >= rays.length
+) return;
+
+// depth check
+if(
+dist >
+rays[rayIndex].distance
+) return;
 
 const size =
-canvas.height/dist;
+canvas.height /
+Math.max(
+dist,
+0.1
+);
 
 ctx.drawImage(
-enemyTexture, // ← FIX
+enemyTexture,
 screenX-size/2,
 canvas.height/2-size/2,
 size,
 size
 );
 
-}
-
-}
-
 });
 
-}// EXIT
-// =======================
+}// =======================
 function drawExit(rays) {
     const tileSize = 1;
 
@@ -1006,8 +1217,27 @@ ctx.fillText(
 'it is cheat codes',
 canvas.width/2,
 260
+
+);
+ctx.font="28px Arial";
+
+ctx.fillText(
+`Dark Levels: ${
+darkLevelsEnabled
+? "ON"
+: "OFF"
+}`,
+canvas.width/2,
+560
 );
 
+ctx.font="18px Arial";
+
+ctx.fillText(
+"(click to toggle)",
+canvas.width/2,
+595
+);
 
 // ===== BIG INPUT BAR =====
 const boxWidth = 700;
@@ -1080,8 +1310,35 @@ canvas.width/2,
 
 
 //sigma//:D
+canvas.addEventListener("click",(e)=>{
+    if(gameState !== "settings") return;
 
-canvas.addEventListener("click", (e)=>{
+    const rect = canvas.getBoundingClientRect();
+
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    const centerX = canvas.width / 2;
+
+    const toggleBox = {
+        left: centerX - 200,
+        right: centerX + 200,
+        top: 540,
+        bottom: 620
+    };
+
+    if(
+        mx > toggleBox.left &&
+        mx < toggleBox.right &&
+        my > toggleBox.top &&
+        my < toggleBox.bottom
+    ){
+        darkLevelsEnabled = !darkLevelsEnabled;
+
+        //  IMPORTANT: force refresh flashlight state
+        flashlightOn = true;
+    }
+});canvas.addEventListener("click", (e)=>{
     if(gameState !== "menu") return;
 
     const y = e.clientY;
@@ -1184,8 +1441,50 @@ function drawJumpscare(){
         height
     );
 }
-function drawCameraEffect(){
+function drawFlashlight(){
 
+if(!isDarkLevel()) return;
+
+ctx.save();
+
+// full darkness
+ctx.fillStyle = "rgba(0,0,0,0.88)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+// flashlight OFF = nothing else
+if(!flashlightOn){
+    ctx.restore();
+    return;
+}
+
+ctx.globalCompositeOperation = "destination-out";
+
+const radius = 280;
+
+const g = ctx.createRadialGradient(
+    canvas.width/2,
+    canvas.height/2,
+    30,
+    canvas.width/2,
+    canvas.height/2,
+    radius
+);
+
+g.addColorStop(0,"rgba(0,0,0,1)");
+g.addColorStop(1,"rgba(0,0,0,0)");
+
+ctx.fillStyle = g;
+
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.restore();
+}function drawCameraEffect(){
+    ctx.save();
+
+ctx.translate(
+sway,
+cameraBob
+);
 const time = performance.now() * 0.01;
 
 // heavy vignette
@@ -1276,6 +1575,8 @@ ctx.lineTo(canvas.width-10,canvas.height-s);
 ctx.stroke();
 
 ctx.restore();
+
+
 }
 
 window.addEventListener("keydown", e => {
@@ -1288,7 +1589,13 @@ window.addEventListener("keydown", e => {
     }
 });
 
+window.addEventListener("keydown",e=>{
 
+if(e.key.toLowerCase()==="f"){
+flashlightOn=!flashlightOn;
+}
+
+});
 // =======================
 // LOOP
 // =======================
@@ -1328,18 +1635,27 @@ if(gameState === "settings"){
 
     const rays = castRays();
 
-    render3D(rays);
-    drawSpecial(rays);
+   
 
-    drawExit(rays);
+render3D(rays);
 
-    drawSprites(rays);
+drawSpecial(rays);
+
+drawExit(rays);
+
+drawSprites(rays);
+
+ctx.restore();
+
     if(showMinimap){
     drawMiniMap(ctx, map, player, rays, enemies);
 }
 
-    drawJumpscare(); 
-    drawCameraEffect();
+drawFlashlight();
+
+drawCameraEffect();
+
+drawJumpscare();
 }
 
     requestAnimationFrame(gameLoop);
