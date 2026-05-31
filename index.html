@@ -38,16 +38,25 @@ resizeCanvas();
 const sounds = {
     walk: new Audio("footsteps.mp3"),
     chase: new Audio("chase.mp3"),
+    ambience: new Audio("ambience.mp3"),
+
     caught: new Audio("jumpscare.mp3"),
     levelClear: new Audio("win.mp3"),
     win: new Audio("win.mp3")
 };
-
+sounds.ambience.loop = true;
+sounds.ambience.volume = 0.5;
 sounds.walk.loop = true;
 sounds.chase.loop = true;
+let showMinimap = true;
 let playerDead = false;
 let walking = false;
 let chasePlaying = false;
+let jumpscareActive = false;
+let jumpscareStart = 0;
+let currentJumpscareImg = new Image();
+let cheatInput = "";
+let cheatUnlocked = false;
 // =======================
 // TEXTURES
 // =======================
@@ -162,7 +171,143 @@ const levels = [
         [1,1,1,1,1,1,1,1,1,1]
     ],
     
-}
+},
+{
+    wall:"walls.png",
+    enemy:"partygoer.png",
+    enemyStart:{x:13,y:3},
+    enemyPower:"phase",
+    map: [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,4,0,0,0,0,0,2,0,0,1,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+    [1,0,0,1,1,1,1,1,1,0,1,0,1,0,1],
+    [1,0,0,1,0,0,0,0,1,0,0,0,1,0,1],
+    [1,0,0,1,1,1,1,0,1,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+    [1,0,1,1,0,0,1,1,1,0,0,0,0,0,1],
+    [1,0,0,1,0,1,1,0,0,0,1,1,0,0,1],
+    [1,0,0,1,1,1,0,0,0,1,0,0,1,0,1],
+    [1,0,0,1,0,0,0,0,0,1,0,0,1,0,1],
+    [1,0,1,1,0,1,1,1,1,1,0,0,0,0,1],
+    [1,0,1,0,0,0,1,0,0,0,0,1,0,0,1],
+    [1,0,0,0,0,0,1,3,0,0,0,1,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+],
+    
+},
+{
+    wall:"walls.png",
+    enemy:"partygoer.png",
+    enemyStart:{x:13,y:1.5},
+    enemyPower:"watcher-blink",
+    map: [
+    
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,2,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,0,1,1,1,0,1,0,1,1,1,0,1],
+    [1,0,1,0,1,0,0,0,1,0,0,0,0,0,1],
+    [1,0,1,0,1,0,1,1,1,1,1,1,1,0,1],
+    [1,0,0,0,1,0,1,0,0,0,0,4,1,0,1],
+    [1,0,1,1,1,0,1,0,1,1,1,1,1,0,1],
+    [1,0,0,0,1,0,1,0,0,0,1,0,0,0,1],
+    [1,1,1,0,1,0,1,0,1,0,1,0,1,1,1],
+    [1,0,1,0,0,0,1,0,1,0,1,0,1,0,1],
+    [1,0,1,1,1,1,1,1,1,0,1,0,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
+    [1,0,1,1,1,0,1,1,1,1,1,0,1,0,1],
+    [1,0,0,0,1,0,0,0,0,0,0,0,0,3,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+
+],
+    
+},
+{
+    wall:"walls.png",
+    enemy:"partygoer.png",
+    enemyStart:{x:18.5,y:1.5},
+    enemyPower:"blink",
+    map: [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,0,1],
+    [1,0,1,0,0,0,0,0,1,0,1,0,0,0,1,0,0,0,0,1],
+    [1,0,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,1,0,1],
+    [1,0,0,0,1,0,1,0,1,0,1,0,1,0,0,0,1,0,0,1],
+    [1,1,1,0,0,0,1,0,1,0,1,0,1,1,1,1,1,0,0,1],
+    [1,0,1,0,1,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1],
+    [1,0,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,0,1],
+    [1,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1],
+    [1,0,1,1,1,0,1,1,1,0,1,0,1,0,1,1,1,0,0,1],
+    [1,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,1,0,0,1],
+    [1,0,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,0,0,1],
+    [1,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,1,0,0,1],
+    [1,0,1,0,1,1,1,1,1,0,1,1,1,0,1,0,1,0,0,1],
+    [1,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1],
+    [1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+
+
+],
+    
+},
+{
+    wall:"walls6.png",
+    enemy:"runforyourlife.png",
+    enemyStart:{x:3.5,y:2.5},
+    enemyPower:"speed",
+    specialSolid: true,
+    special:"obstacles.png",
+    map: [
+    
+    [1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,2,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,4,4,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,4,4,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,4,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,4,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,4,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,4,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,3,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+
+
+
+],
+    
+},
 ];
 
 let currentLevel = 0;
@@ -191,6 +336,25 @@ const enemies = [];
 // =======================
 let hasSpecial = false;
 let specialSolid = true;
+let gameState = "menu"; 
+// "menu" | "playing" | "credits" | "lore"
+
+const loreUnlocked = Array(levels.length).fill(false);
+
+const loreText = [
+    "Level 1: The entity draws closer. Listening to the quake of your footsteps...",
+    "Level 2: You get an eerie feeling. something or someone is watching.",
+    "Level 3: A mandela, deja vu, a place you've seen before.",
+    "Level 4: It is proud.",
+    "Level 5: Dreadful eyes stare.",
+    "Level FUN: Unlucky. The most deadly level.",
+    "Level FUN.1: Traverse your way through the madness or encounter a deadly suprise...",
+    "Level FUN.2: encountering powerful entitys which can walk through walls and move quick if you look away...",
+    "Level FUN.3: the last stretch the exit door nearing closer and closer to the next level...",
+    "Level RUN FOR YOUR LIFE: RUN!!!",
+
+
+];
 function loadLevel(levelIndex){
 
 
@@ -203,7 +367,8 @@ function loadLevel(levelIndex){
 
     wallTexture.src = level.wall;
     enemyTexture.src = level.enemy;
-
+    currentJumpscareImg = new Image();
+currentJumpscareImg.src = level.enemy; 
     hasSpecial = !!level.special;
     specialSolid = level.specialSolid ?? true;
 
@@ -232,9 +397,11 @@ function loadLevel(levelIndex){
     enemies.length = 0;
 
     enemies.push({
-        x: level.enemyStart.x,
-        y: level.enemyStart.y
-    });
+    x: level.enemyStart.x,
+    y: level.enemyStart.y,
+    power: level.enemyPower || null,
+    stuckTime: 0
+});
 }
 
 // =======================
@@ -312,6 +479,7 @@ function castRays(){
 // PLAYER MOVEMENT
 // =======================
 function updatePlayer(){
+    if(jumpscareActive) return;
     const speed=0.05;
     let dx=0,dy=0;
     const moving = keys.w || keys.s;
@@ -348,7 +516,7 @@ if(!blocked){
         if(currentLevel < levels.length-1){
             sounds.levelClear.currentTime=0;
 sounds.levelClear.play();
-
+loreUnlocked[currentLevel] = true;
 loadLevel(currentLevel+1);
             
         } else {
@@ -378,105 +546,188 @@ if(!moving && walking){
 // =======================
 // ENEMY AI
 // =======================
+function triggerJumpscare(){
+    jumpscareActive = true;
+    jumpscareStart = Date.now();
+
+    sounds.caught.currentTime = 0;
+    sounds.caught.play().catch(()=>{});
+}
+
+
 function updateEnemies(){
 
 let close = false;
 
-enemies.forEach(enemy=>{
+enemies.forEach(enemy => {
 
-    const dx = player.x-enemy.x;
-    const dy = player.y-enemy.y;
+    const dx = player.x - enemy.x;
+    const dy = player.y - enemy.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
 
-    const dist =
-        Math.sqrt(dx*dx+dy*dy);
-
-    if(dist<3){
-        close=true;
+    if(dist < 3){
+        close = true;
     }
 
-    if(dist>0.4){
+    if(dist > 0.4){
 
-        let moveX =
-            (dx/dist)*0.025;
+        let speed = 0.025;
 
-        let moveY =
-            (dy/dist)*0.025;
+        // Phase enemies move 2x slower
+        if(enemy.power === "phase"){
+            speed = 0.0125;
+        }
+        if(enemy.power === "speed"){
+            speed = 0.051;
+        }
+        if(enemy.power === "watcher"){
+            speed = 0.040;
+        }
+        if(enemy.power === "watcher-blink"){
+            speed = 0.02;
+        }
+        // Watcher logic
+        if(enemy.power === "watcher"){
 
-            const tileX =
-map[Math.floor(enemy.y)]
-?.[Math.floor(enemy.x+moveX)];
+            const angleToEnemy = Math.atan2(enemy.y - player.y, enemy.x - player.x);
 
-const blockedX =
-    tileX === 1 ||
-    (tileX === 4 && specialSolid);
+            let angleDiff = Math.abs(player.angle - angleToEnemy);
 
-if(!blockedX){
-    enemy.x += moveX;
+            while(angleDiff > Math.PI){
+                angleDiff -= Math.PI * 2;
+            }
+
+            angleDiff = Math.abs(angleDiff);
+
+            // If player is looking near enemy, freeze it
+            if(angleDiff < player.fov / 2){
+                return;
+            }
+        }
+        if(enemy.power === "watcher-blink"){
+
+const angleToEnemy = Math.atan2(enemy.y - player.y, enemy.x - player.x);
+
+let angleDiff = Math.abs(player.angle - angleToEnemy);
+
+while(angleDiff > Math.PI){
+    angleDiff -= Math.PI * 2;
 }
+
+angleDiff = Math.abs(angleDiff);
+
+// If player is looking near enemy, freeze it
+if(angleDiff < player.fov / 2){
+    return;
+}
+}
+
+        let moveX = (dx / dist) * speed;
+        let moveY = (dy / dist) * speed;
+
+        const tileX =
+            map[Math.floor(enemy.y)]
+            ?.[Math.floor(enemy.x + moveX)];
 
         const tileY =
-map[Math.floor(enemy.y+moveY)]
-?.[Math.floor(enemy.x)];
+            map[Math.floor(enemy.y + moveY)]
+            ?.[Math.floor(enemy.x)];
 
-const blockedY =
-    tileY === 1 ||
-    (tileY === 4 && specialSolid);
+        let blockedX =
+            tileX === 1 ||
+            (tileX === 4 && specialSolid);
 
-if(!blockedY){
-    enemy.y += moveY;
+        let blockedY =
+            tileY === 1 ||
+            (tileY === 4 && specialSolid);
+
+        // PHASE ENEMY
+        if(enemy.power === "phase"){
+
+            if(blockedX || blockedY){
+                enemy.stuckTime++;
+            } else {
+                enemy.stuckTime = 0;
+            }
+
+            if(enemy.stuckTime > 60){
+                blockedX = false;
+                blockedY = false;
+            }
+        }
+        if(enemy.power === "watcher-blink"){
+
+if(blockedX || blockedY){
+    enemy.stuckTime++;
+} else {
+    enemy.stuckTime = 0;
 }
 
+if(enemy.stuckTime > 60){
+    blockedX = false;
+    blockedY = false;
+}
+}
+
+        if(!blockedX){
+            enemy.x += moveX;
+        }
+
+        if(!blockedY){
+            enemy.y += moveY;
+        }
     }
 
-    if(dist<0.4 && !playerDead){
+    if(dist < 0.4 && !playerDead && !jumpscareActive){
 
-playerDead = true;
+        playerDead = true;
 
-sounds.walk.pause();
-sounds.chase.pause();
+        sounds.walk.pause();
+        sounds.chase.pause();
 
-sounds.caught.currentTime = 2;
+        sounds.caught.currentTime = 2;
+        sounds.caught.play().catch(()=>{});
 
-sounds.caught.play().catch(()=>{});
+        triggerJumpscare();
 
-setTimeout(()=>{
-
-    alert("ENTITY GOT YOU");
-
-    loadLevel(currentLevel);
-
-    playerDead = false;
-
-},300);
-
-}
-
+        setTimeout(() => {
+            jumpscareActive = false;
+            playerDead = false;
+            loadLevel(currentLevel);
+        }, 3000);
+    }
 });
+if(close && !chasePlaying){
+    chasePlaying = true;
 
-// CHASE SOUND
+    // stop ambience
+    sounds.ambience.pause();
 
-if(close&&!chasePlaying){
-
-    chasePlaying=true;
-
-    sounds.chase.currentTime=0;
-
-    sounds.chase.play()
-    .catch(()=>{});
-
+    // start chase
+    sounds.chase.currentTime = 0;
+    sounds.chase.play().catch(()=>{});
 }
 
-if(!close&&chasePlaying){
+if(!close && chasePlaying){
+    chasePlaying = false;
 
-    chasePlaying=false;
-
+    // stop chase
     sounds.chase.pause();
 
+    // resume ambience
+    sounds.ambience.play().catch(()=>{});
 }
 
+// if nothing is playing, keep ambience running
+if(
+    !chasePlaying &&
+    sounds.ambience.paused &&
+    !jumpscareActive &&
+    gameState === "playing"
+){
+    sounds.ambience.play().catch(()=>{});
 }
-
-// =======================
+}// =======================
 // RENDER
 // =======================
 function render3D(rays){
@@ -565,131 +816,534 @@ size
 
 }// EXIT
 // =======================
-function drawExit(rays){
-    
-    for(let y=0;y<map.length;y++){
-        for(let x=0;x<map[y].length;x++){
+function drawExit(rays) {
+    const tileSize = 1;
 
-            if(map[y][x]===3){
+    for (let y = 0; y < map.length; y++) {
+        for (let x = 0; x < map[y].length; x++) {
 
-                const dx=x+0.5-player.x;
-                const dy=y+0.5-player.y;
-                const dist=Math.sqrt(dx*dx+dy*dy);
+            if (map[y][x] !== 3) continue;
 
-                const angle=Math.atan2(dy,dx)-player.angle;
+            const dx = (x + 0.5) - player.x;
+            const dy = (y + 0.5) - player.y;
 
-                if(Math.abs(angle)<player.fov/2){
+            const dist = Math.hypot(dx, dy);
 
-                    const size=canvas.height/dist;
-                    const screenX=(angle/player.fov+0.5)*canvas.width;
-                    const rayIndex=Math.floor(screenX);
+            let angle = Math.atan2(dy, dx) - player.angle;
 
-                    if(rayIndex>=0 && rayIndex<rays.length && dist<rays[rayIndex].distance){
-                        ctx.drawImage(
-                            exitTexture,
-                            screenX-size/2,
-                            canvas.height/2-size/2,
-                            size,size
-                        );
-                    }
+            // normalize angle properly
+            angle = Math.atan2(Math.sin(angle), Math.cos(angle));
+
+            if (Math.abs(angle) > player.fov / 2) continue;
+
+            const correctedDist = dist * Math.cos(angle);
+            if (correctedDist <= 0.01) continue;
+
+            const size = canvas.height / correctedDist;
+
+            const screenX =
+                (0.5 + angle / player.fov) * canvas.width;
+
+            // 🔥 instead of single rayIndex, sample a range
+            const rayCenter = Math.floor((screenX / canvas.width) * rays.length);
+            const spread = 4;
+
+            let visible = false;
+
+            for (let i = -spread; i <= spread; i++) {
+                const r = rayCenter + i;
+
+                if (r < 0 || r >= rays.length) continue;
+
+                // looser threshold fixes corner flicker
+                if (correctedDist < rays[r].distance + 1.2) {
+                    visible = true;
+                    break;
                 }
+            }
+
+            if (visible) {
+                ctx.drawImage(
+                    exitTexture,
+                    screenX - size / 2,
+                    canvas.height / 2 - size / 2,
+                    size,
+                    size
+                );
             }
         }
     }
 }
 
+
 function drawSpecial(rays){
 
 if(
-!hasSpecial ||
-!specialTexture.complete ||
-specialTexture.naturalWidth === 0
-) return;
+    !hasSpecial ||
+    !specialTexture.complete ||
+    specialTexture.naturalWidth === 0
+) return; // ✅ OK because still inside function
 
 for(let y=0;y<map.length;y++){
-for(let x=0;x<map[y].length;x++){
+    for(let x=0;x<map[y].length;x++){
 
-if(map[y][x] !== 4) continue;
+        if(map[y][x] !== 4) continue;
 
-const dx = x+0.5-player.x;
-const dy = y+0.5-player.y;
+        const dx = x+0.5-player.x;
+        const dy = y+0.5-player.y;
 
-const dist =
-Math.sqrt(dx*dx+dy*dy);
+        const dist = Math.sqrt(dx*dx+dy*dy);
 
-let angle =
-Math.atan2(dy,dx)
--player.angle;
+        let angle = Math.atan2(dy,dx) - player.angle;
+        angle = ((angle+Math.PI)%(Math.PI*2)) - Math.PI;
 
-angle =
-((angle+Math.PI)%
-(Math.PI*2))
--Math.PI;
+        if(Math.abs(angle) >= player.fov/2) continue;
 
-if(Math.abs(angle)>=player.fov/2)
-continue;
+        const screenX =
+            ((angle+player.fov/2)/player.fov) * canvas.width;
 
-const screenX =
-((angle+player.fov/2)
-/player.fov)
-*canvas.width;
+        const rayIndex = Math.floor(screenX);
 
-const rayIndex =
-Math.floor(screenX);
+        if(rayIndex < 0 || rayIndex >= rays.length) continue;
 
-if(
-rayIndex < 0 ||
-rayIndex >= rays.length
-){
-continue;
+        if(dist > rays[rayIndex].distance) continue;
+
+        const size = canvas.height / dist;
+
+        ctx.drawImage(
+            specialTexture,
+            screenX - size/2,
+            canvas.height/2 - size/2,
+            size,
+            size
+        );
+    }
+}
 }
 
-// WALL IS CLOSER → DON'T DRAW
-if(
-dist >
-rays[rayIndex].distance
-){
-continue;
+
+function drawMenu(){
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+
+    ctx.font = "60px Arial";
+    ctx.fillText("BACKROOMS GAME", canvas.width/2, 120);
+
+    ctx.font = "30px Arial";
+    ctx.fillText("PLAY", canvas.width/2, 250);
+ctx.fillText("CREDITS", canvas.width/2, 320);
+ctx.fillText("LORE", canvas.width/2, 390);
+ctx.fillText("SETTINGS", canvas.width/2, 460);
+
+    ctx.font = "20px Arial";
+    ctx.fillText("Click anywhere", canvas.width/2, 500);
 }
 
-const size =
-canvas.height/dist;
+function drawCredits(){
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
-ctx.drawImage(
-specialTexture,
-screenX-size/2,
-canvas.height/2-size/2,
-size,
-size
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+
+    ctx.font = "50px Arial";
+    ctx.fillText("CREDITS", canvas.width/2, 120);
+
+    ctx.font = "25px Arial";
+    ctx.fillText("Made by jaxon (handsome guy trust)", canvas.width/2, 220);
+    ctx.fillText("sounds: yt", canvas.width/2, 270);
+    ctx.fillText("Textures: Pulled from google", canvas.width/2, 320);
+    ctx.fillText("so basically all by the sigma jaxon!!!", canvas.width/2, 420);
+
+}
+
+function drawLore(){
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+
+    ctx.font = "50px Arial";
+    ctx.fillText("LORE", canvas.width/2, 120);
+
+    ctx.font = "22px Arial";
+
+    let unlocked = loreText.filter((_,i)=>loreUnlocked[i]);
+
+    if(unlocked.length === 0){
+        ctx.fillText("No lore unlocked yet...", canvas.width/2, 250);
+    } else {
+        unlocked.forEach((l,i)=>{
+            ctx.fillText(l, canvas.width/2, 250 + i*40);
+        });
+    }
+}
+function drawSettings(){
+
+ctx.fillStyle = "black";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.textAlign = "center";
+
+// title
+ctx.fillStyle = "white";
+ctx.font = "50px Arial";
+ctx.fillText("SETTINGS", canvas.width/2,120);
+
+// instructions
+ctx.font = "24px Arial";
+ctx.fillText(
+'totally not a cheat code system',
+canvas.width/2,
+220
+);
+
+ctx.fillText(
+'it is cheat codes',
+canvas.width/2,
+260
+);
+
+
+// ===== BIG INPUT BAR =====
+const boxWidth = 700;
+const boxHeight = 80;
+
+const boxX =
+(canvas.width - boxWidth)/2;
+
+const boxY = 340;
+
+// lighter than background
+ctx.fillStyle = "rgb(35,35,35)";
+ctx.fillRect(
+boxX,
+boxY,
+boxWidth,
+boxHeight
+);
+
+// border
+ctx.strokeStyle = "rgb(120,120,120)";
+ctx.lineWidth = 4;
+
+ctx.strokeRect(
+boxX,
+boxY,
+boxWidth,
+boxHeight
+);
+
+// text inside
+ctx.textAlign = "left";
+
+ctx.fillStyle = "white";
+ctx.font = "36px monospace";
+
+const displayText =
+cheatInput.length
+? cheatInput
+: "Type cheat code here...";
+
+ctx.fillText(
+displayText + (
+Math.floor(Date.now()/500)%2
+? "|"
+: ""
+),
+boxX + 20,
+boxY + 52
+);
+
+// status
+if(cheatUnlocked){
+
+ctx.textAlign = "center";
+
+ctx.fillStyle = "lime";
+
+ctx.font = "30px Arial";
+
+ctx.fillText(
+"Level Loaded!",
+canvas.width/2,
+500
 );
 
 }
 
 }
 
-}// =======================
+
+//sigma//:D
+
+canvas.addEventListener("click", (e)=>{
+    if(gameState !== "menu") return;
+
+    const y = e.clientY;
+
+    if(y >= 220 && y < 280){
+        gameState = "playing";
+    }
+    else if(y >= 290 && y < 350){
+        gameState = "credits";
+    }
+    else if(y >= 360 && y < 420){
+        gameState = "lore";
+    }
+    else if(y >= 430 && y < 490){
+        gameState = "settings";
+    }
+});
+
+window.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape"){
+        gameState = "menu";
+    }
+});
+window.addEventListener("keydown",(e)=>{
+
+if(gameState !== "settings") return;
+
+// backspace
+if(e.key === "Backspace"){
+    cheatInput =
+    cheatInput.slice(0,-1);
+
+    e.preventDefault();
+    return;
+}
+
+// enter → activate cheat
+if(e.key === "Enter"){
+
+const match =
+cheatInput
+.toLowerCase()
+.match(/^jaxon is sigma(\d+)$/);
+
+if(match){
+
+const level =
+parseInt(match[1])-1;
+
+if(
+level >= 0 &&
+level < levels.length
+){
+
+cheatUnlocked = true;
+
+loadLevel(level);
+
+gameState = "playing";
+
+}
+}
+
+return;
+}
+
+// normal typing
+if(
+e.key.length === 1 &&
+cheatInput.length < 40
+){
+    cheatInput += e.key;
+}
+
+});
+function drawJumpscare(){
+    if(!jumpscareActive) return;
+
+    // full blackout
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    const time = Date.now() - jumpscareStart;
+
+    // quick pop-in (optional but nice)
+    const progress = Math.min(time / 200, 1);
+
+    // cube fills height, but keeps side margins
+    const height = canvas.height * progress;
+    const width = height; // square “cube face”
+
+    const x = (canvas.width - width) / 2;
+    const y = (canvas.height - height) / 2;
+
+    ctx.drawImage(
+        currentJumpscareImg,
+        x,
+        y,
+        width,
+        height
+    );
+}
+function drawCameraEffect(){
+
+const time = performance.now() * 0.01;
+
+// heavy vignette
+const gradient = ctx.createRadialGradient(
+    canvas.width/2,
+    canvas.height/2,
+    canvas.width*0.01,
+    canvas.width/2,
+    canvas.height/2,
+    canvas.width*1.15
+);
+
+gradient.addColorStop(0,"rgba(0,0,0,0)");
+gradient.addColorStop(0.25,"rgba(0,0,0,0.15)");
+gradient.addColorStop(0.45,"rgba(0,0,0,0.45)");
+gradient.addColorStop(0.7,"rgba(0,0,0,0.75)");
+gradient.addColorStop(1,"rgba(0,0,0,0.95)");
+
+ctx.fillStyle = gradient;
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+// random camera shake/glitch
+const shakeX = (Math.random()-0.5)*4;
+const shakeY = (Math.random()-0.5)*4;
+
+ctx.save();
+ctx.translate(shakeX, shakeY);
+
+// flicker
+ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.03})`;
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+// scanlines
+ctx.strokeStyle = "rgba(255,255,255,0.09)";
+for(let y=0;y<canvas.height;y+=3){
+    ctx.beginPath();
+    ctx.moveTo(0,y+Math.sin(time+y*0.01)*2);
+    ctx.lineTo(canvas.width,y+Math.sin(time+y*0.01)*2);
+    ctx.stroke();
+}
+
+// static noise
+for(let i=0;i<4000;i++){
+    ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.12})`;
+    ctx.fillRect(
+        Math.random()*canvas.width,
+        Math.random()*canvas.height,
+        1,
+        1
+    );
+}
+
+// REC
+ctx.fillStyle = Math.sin(time*0.6) > 0 ? "red" : "darkred";
+ctx.font = "24px monospace";
+ctx.fillText("● REC", 20, 35);
+
+// timer
+ctx.fillStyle = "white";
+const seconds = Math.floor(performance.now()/1000);
+const mins = String(Math.floor(seconds/60)).padStart(2,"0");
+const secs = String(seconds%60).padStart(2,"0");
+
+ctx.fillText(`${mins}:${secs}`, canvas.width-120, 35);
+
+// battery
+ctx.strokeStyle = "white";
+ctx.strokeRect(canvas.width-70,50,40,18);
+ctx.fillRect(canvas.width-28,55,4,8);
+ctx.fillRect(canvas.width-67,53,25,12);
+
+// corner brackets
+ctx.strokeStyle = "white";
+ctx.lineWidth = 3;
+const s = 45;
+
+ctx.beginPath();
+
+ctx.moveTo(10,s); ctx.lineTo(10,10); ctx.lineTo(s,10);
+ctx.moveTo(canvas.width-s,10); ctx.lineTo(canvas.width-10,10); ctx.lineTo(canvas.width-10,s);
+
+ctx.moveTo(10,canvas.height-s); ctx.lineTo(10,canvas.height-10); ctx.lineTo(s,canvas.height-10);
+
+ctx.moveTo(canvas.width-s,canvas.height-10);
+ctx.lineTo(canvas.width-10,canvas.height-10);
+ctx.lineTo(canvas.width-10,canvas.height-s);
+
+ctx.stroke();
+
+ctx.restore();
+}
+
+window.addEventListener("keydown", e => {
+    const key = e.key.toLowerCase();
+
+    keys[key] = true;
+
+    if(key === "m"){
+        showMinimap = !showMinimap;
+    }
+});
+
+
+// =======================
 // LOOP
 // =======================
 function gameLoop(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
+    // MENU
+    if(gameState === "menu"){
+        drawMenu();
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+
+    // CREDITS
+    if(gameState === "credits"){
+        drawCredits();
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+
+    // LORE
+    if(gameState === "lore"){
+        drawLore();
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+    // SETTINGS
+if(gameState === "settings"){
+    drawSettings();
+    requestAnimationFrame(gameLoop);
+    return;
+}
+    // GAME
+    if(gameState === "playing"){
     updatePlayer();
     updateEnemies();
 
-    const rays=castRays();
-    render3D(rays);
-drawSpecial(rays);
-if(hasSpecial && !specialSolid){
-    drawExit(rays);
-}
-drawSprites(rays);
-   
+    const rays = castRays();
 
+    render3D(rays);
+    drawSpecial(rays);
+
+    drawExit(rays);
+
+    drawSprites(rays);
+    if(showMinimap){
     drawMiniMap(ctx, map, player, rays, enemies);
+}
+
+    drawJumpscare(); 
+    drawCameraEffect();
+}
 
     requestAnimationFrame(gameLoop);
 }
-
 loadLevel(0);
 gameLoop();
 
