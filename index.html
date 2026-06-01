@@ -44,6 +44,41 @@ const sounds = {
     levelClear: new Audio("win.mp3"),
     win: new Audio("win.mp3")
 };
+let deaths = 0;
+let bestScore = 0;
+const difficultyMult = {
+    easy: 1.8,
+    exploring: 1.5,
+    scratch: 1.3,
+    normal: 1,
+    hard: 0.95,
+    extreme: 0.9,
+    impossible: 0.85
+};
+const scoremultiplyer = {
+    easy: .4,
+    exploring: .6,
+    scratch:.85,
+    normal: 1,
+    hard: 1.3,
+    extreme: 1.6,
+    impossible: 2
+};
+function calculateScore(){
+
+const levelsCompleted = currentLevel;
+
+return Math.max(
+0,
+Math.floor(
+(levelsCompleted * 1000 *
+scoremultiplyer[gameDifficulty])
+-
+(deaths * 250)
+)
+);
+
+}
 let gameDifficulty = "normal";
 sounds.ambience.loop = true;
 sounds.ambience.volume = 0.5;
@@ -112,7 +147,10 @@ function updateStaminaBar(){
 
 staminaBar.style.width=
 stamina+"vw";
-
+if(stamina>50){
+staminaBar.style.background=
+"lime";
+}
 if(stamina<50){
 staminaBar.style.background=
 "orange";
@@ -844,6 +882,37 @@ const levels = [
 
     
 },
+{
+    wall:"starrynight.jpg",
+    enemy:"smiler.png",
+    enemyStart:{x:9.5,y:3.5},
+    specialSolid: false,
+    special:"house.png",
+    map: [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,4,0,0,0,0,0,0,0,0,0,0,4,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,4,0,0,0,0,0,0,0,0,0,0,4,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,4,0,0,0,0,0,0,0,0,0,0,4,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+]
+
+    
+},
 ];
 
 let currentLevel = 0;
@@ -1067,15 +1136,7 @@ if(!Number.isFinite(player.x) || !Number.isFinite(player.y)){
 // =========================
 // SPEED + DIFFICULTY FIX
 // =========================
-const difficultyMult = {
-    easy: 1.8,
-    exploring: 1.5,
-    scratch: 1.3,
-    normal: 1,
-    hard: 0.95,
-    extreme: 0.9,
-    impossible: 0.85
-};
+
 
 const mult = difficultyMult[gameDifficulty] ?? 1;
 
@@ -1208,8 +1269,8 @@ const exTile = exRow?.[Math.floor(player.x)];
 
 if(exTile === 3){
 
-    if(currentLevel < levels.length - 1){
-
+    if(currentLevel < levels.length-1){
+        
         sounds.levelClear.currentTime = 0;
         sounds.levelClear.play();
 
@@ -1222,7 +1283,19 @@ if(exTile === 3){
 
         loadLevel(currentLevel + 1);
         rollItemSpawns();
+        
     }
+    else{
+
+bestScore =
+Math.max(
+bestScore,
+calculateScore()
+);
+
+gameState = "menu";
+
+}
 }
 }// =======================
 function triggerJumpscare(){
@@ -1361,7 +1434,7 @@ if(enemy.stuckTime > 60){
     if(dist < 0.4 && !playerDead && !jumpscareActive){
 
         playerDead = true;
-
+        deaths ++;
         sounds.walk.pause();
         sounds.chase.pause();
 
@@ -1378,7 +1451,11 @@ if(enemy.stuckTime > 60){
     // ===== RESET STATS ON DEATH =====
     stamina = 100;
     exhausted = false;
-
+    bestScore =
+Math.max(
+bestScore,
+calculateScore()
+);
     loadLevel(currentLevel);
 }, 3000);
         }, 3000);
@@ -1789,8 +1866,13 @@ ctx.fillText("CREDITS", canvas.width/2, 320);
 ctx.fillText("LORE", canvas.width/2, 390);
 ctx.fillText("SETTINGS", canvas.width/2, 460);
 ctx.fillText("DIFFICULTY", canvas.width/2, 530);
+ctx.fillText("SCORE", canvas.width/2, 600);
+
     ctx.font = "20px Arial";
-    ctx.fillText("Click anywhere", canvas.width/2, 580);
+    ctx.font="28px Arial";
+
+
+    ctx.fillText("Click anywhere", canvas.width/2, 720);
 }
 
 function drawCredits(){
@@ -2061,6 +2143,69 @@ function drawDifficultyMenu(){
     ctx.font = "18px Arial";
     ctx.fillText("Click to select, ESC to go back", canvas.width/2, 620);
 }
+
+function drawScoreMenu(){
+
+ctx.fillStyle="black";
+ctx.fillRect(
+0,
+0,
+canvas.width,
+canvas.height
+);
+
+ctx.fillStyle="white";
+ctx.textAlign="center";
+
+ctx.font="55px Arial";
+
+ctx.fillText(
+"SCORE",
+canvas.width/2,
+120
+);
+
+ctx.font="30px Arial";
+
+ctx.fillText(
+`Current Score: ${calculateScore()}`,
+canvas.width/2,
+250
+);
+
+ctx.fillText(
+`Best Score: ${bestScore}`,
+canvas.width/2,
+320
+);
+
+ctx.fillText(
+`Deaths: ${deaths}`,
+canvas.width/2,
+390
+);
+
+ctx.fillText(
+`Levels Cleared: ${currentLevel}`,
+canvas.width/2,
+460
+);
+
+ctx.fillText(
+`Difficulty: ${gameDifficulty}`,
+canvas.width/2,
+530
+);
+
+ctx.font="20px Arial";
+
+ctx.fillText(
+"ESC to return",
+canvas.width/2,
+650
+);
+
+}
 //sigma//:D
 canvas.addEventListener("click",(e)=>{
     if(gameState !== "settings") return;
@@ -2100,6 +2245,7 @@ const y = e.clientY;
 if(gameState === "difficulty"){
 
     if(y < 240) gameDifficulty = "easy";
+    
     else if(y < 300) gameDifficulty = "exploring";
     else if(y < 360) gameDifficulty = "scratch";
     else if(y < 420) gameDifficulty = "normal";
@@ -2129,7 +2275,9 @@ if(gameState === "menu"){
     else if(y >= 500 && y < 560){
         gameState = "difficulty";
     }
-
+    else if(y >= 570 && y < 630){
+    gameState = "score";
+}
     return;
 }
 
@@ -2408,6 +2556,11 @@ if(gameState === "settings"){
 }
 if(gameState === "difficulty"){
     drawDifficultyMenu();
+    requestAnimationFrame(gameLoop);
+    return;
+}
+if(gameState === "score"){
+    drawScoreMenu();
     requestAnimationFrame(gameLoop);
     return;
 }
