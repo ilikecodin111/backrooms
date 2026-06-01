@@ -44,6 +44,7 @@ const sounds = {
     levelClear: new Audio("win.mp3"),
     win: new Audio("win.mp3")
 };
+let gameDifficulty = "normal";
 sounds.ambience.loop = true;
 sounds.ambience.volume = 0.5;
 sounds.walk.loop = true;
@@ -67,6 +68,206 @@ let flashlightOn = true;
 let darkLevel = true;
 
 let darkLevelsEnabled = true;
+
+// ===== STAMINA =====
+
+let stamina = 100;
+let exhausted = false;
+
+let sprintHeld = false;
+
+const STAMINA_DRAIN = 0.45; // per frame
+const STAMINA_REGEN = 0.05; // per frame
+
+document.addEventListener("keydown",(e)=>{
+if(e.key==="Shift") sprintHeld=true;
+});
+
+document.addEventListener("keyup",(e)=>{
+if(e.key==="Shift") sprintHeld=false;
+});
+
+// thin bottom bar
+const staminaBar=document.createElement("div");
+
+staminaBar.style.position="fixed";
+staminaBar.style.left="50%";
+staminaBar.style.bottom="0";
+
+staminaBar.style.height="4px";
+
+staminaBar.style.width="100vw";
+
+staminaBar.style.background="lime";
+
+staminaBar.style.transform=
+"translateX(-50%)";
+
+staminaBar.style.pointerEvents=
+"none";
+
+document.body.appendChild(staminaBar);
+
+function updateStaminaBar(){
+
+staminaBar.style.width=
+stamina+"vw";
+
+if(stamina<50){
+staminaBar.style.background=
+"orange";
+}
+
+if(stamina<20){
+staminaBar.style.background=
+"red";
+}
+
+}
+const almondImg = new Image();
+almondImg.src = "almondwater.png";
+
+const candyImg = new Image();
+candyImg.src = "candy.png";
+// ===== INVENTORY =====
+
+let items=[];
+let inventory=[];
+
+const MAX_ITEMS=2;
+
+let candyLevels=0;
+
+const ITEMS = {
+    almond: {
+        name: "almond",
+        img: almondImg
+    },
+    candy: {
+        name: "candy",
+        img: candyImg
+    }
+};
+
+// random item on spawn tiles
+function getRandomItem(){
+return Math.random()<0.5
+? ITEMS.almond
+: ITEMS.candy;
+}
+// pickup
+function addItem(item){
+
+if(
+inventory.length>=MAX_ITEMS
+) return;
+
+inventory.push(item);
+
+updateInventory();
+
+}
+
+// use item
+function useItem(slot){
+
+const item = inventory[slot];
+
+if(!item) return;
+
+// ALMOND WATER
+if(item.name === "almond"){
+
+exhausted = false;
+stamina = Math.min(100, stamina + 50);
+
+}
+
+// CANDY
+if(item.name === "candy"){
+
+candyLevels = 5;
+
+}
+
+// remove item after use
+inventory.splice(slot, 1);
+
+updateInventory();
+
+}
+// keys
+document.addEventListener(
+"keydown",
+(e)=>{
+
+if(e.key==="1")
+useItem(0);
+
+if(e.key==="2")
+useItem(1);
+
+}
+);
+
+// UI
+const inv=
+document.createElement(
+"div"
+);
+
+inv.style.position=
+"fixed";
+
+inv.style.bottom=
+"10px";
+
+inv.style.right=
+"10px";
+
+inv.style.color=
+"white";
+
+inv.style.font=
+"16px sans-serif";
+
+document.body.appendChild(
+inv
+);
+
+function updateInventory(){
+
+inv.innerHTML = "";
+
+inventory.forEach((item, i)=>{
+
+const slot = document.createElement("div");
+
+slot.style.display = "flex";
+slot.style.alignItems = "center";
+slot.style.gap = "8px";
+slot.style.marginBottom = "4px";
+slot.style.color = "white";
+slot.style.font = "14px monospace";
+
+const img = document.createElement("img");
+
+img.src = item.img.src;
+img.style.width = "24px";
+img.style.height = "24px";
+
+slot.appendChild(img);
+
+const text = document.createElement("span");
+text.textContent = `${i+1}: ${item.name}`;
+
+slot.appendChild(text);
+
+inv.appendChild(slot);
+
+});
+
+}
 // =======================
 // TEXTURES
 // =======================
@@ -74,6 +275,8 @@ const wallTexture = new Image();
 const exitTexture = new Image();
 const enemyTexture = new Image();
 const specialTexture = new Image();
+const itemImg = new Image();
+itemImg.src = "almondwater.png";
 exitTexture.onload = () => {
     console.log("exit loaded");
 };
@@ -100,7 +303,7 @@ specialTexture.onerror = () => {
 // =======================
 const levels = [
 {
-    wall:"walls.png",
+    wall:"walls.jpg",
     enemy:"bacteria.png",
     special:"almondwater.png",
     specialSolid: false,
@@ -109,17 +312,67 @@ const levels = [
         [1,1,1,1,1,1,1,1,1,1],
         [1,2,0,0,0,0,0,0,0,1],
         [1,0,1,1,0,1,1,0,0,1],
-        [1,0,0,1,0,0,1,0,0,1],
-        [1,0,0,1,0,0,1,0,0,1],
-        [1,4,0,0,0,1,0,0,3,1],
+        [1,6,0,1,0,0,1,0,0,1],
+        [1,6,0,1,0,0,1,0,0,1],
+        [1,0,0,0,0,1,0,0,3,1],
         [1,1,1,1,1,1,1,1,1,1]
     ]
+},
+{
+    wall:"walls.jpg",
+    enemy:"bacteria.png",
+    special:"almondwater.png",
+    specialSolid: false,
+    enemyStart:{x:11.5,y:3.5},
+    map:[
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,2,0,0,0,0,0,0,0,0,0,0,0,1,1],
+    [1,0,1,0,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,1,0,1,0,0,0,0,0,1,4,1],
+    [1,0,1,1,1,0,1,0,1,0,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,1,0,1,0,0,0,1],
+    [1,0,1,1,1,1,1,0,1,0,1,0,1,0,1],
+    [1,0,1,0,0,0,0,0,1,0,1,0,1,0,1],
+    [1,0,1,0,1,1,1,0,1,0,1,0,1,0,1],
+    [1,0,1,0,1,0,0,0,0,0,1,0,1,0,1],
+    [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
+    [1,0,1,0,1,0,0,0,1,0,1,0,1,0,1],
+    [1,0,0,0,1,1,1,0,1,0,1,0,1,0,1],
+    [1,1,1,0,0,0,0,0,0,0,0,0,0,3,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+]
+},
+{
+    wall:"walls.jpg",
+    enemy:"bacteria.png",
+    special:"almondwater.png",
+    enemyPower:"phase",
+    specialSolid: false,
+    enemyStart:{x:6.5,y:7.5},
+    map:[
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,2,1,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,0,4,1,1,1,0,1,0,0,1,0,1],
+    [1,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,0,0,0,0,0,1,0,1,0,0,1,1],
+    [1,0,0,0,1,0,1,0,1,0,0,0,1,0,1],
+    [1,1,1,0,1,0,1,0,1,0,1,0,1,0,1],
+    [1,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,0,0,1,0,0,1,0,0,1,1,0,1],
+    [1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+    [1,0,1,1,0,0,1,1,1,0,0,0,0,0,1],
+    [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
+    [1,0,1,0,0,0,1,0,1,0,1,0,1,0,1],
+    [1,3,0,0,0,0,1,0,0,0,1,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+]
 },
 {
     wall:"walls2.png",
     special:"frowner.png",
     enemy:"smiler.png",
     specialSolid: false,
+    enemyPower:"phase",
     enemyStart:{x:8.5,y:2.5},
     map:[
         [1,1,1,1,1,1,1,1,1,1],
@@ -130,6 +383,77 @@ const levels = [
         [1,0,0,0,0,0,0,0,3,1],
         [1,1,1,1,1,1,1,1,1,1]
     ]
+},
+{
+    wall:"walls2.png",
+    special:"frowner.png",
+    enemy:"smiler.png",
+    specialSolid: false,
+    enemyPower:"phase",
+    enemyStart:{x:9.5,y:13.5},
+    map:[
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,2,0,0,0,0,1,0,0,0,1,0,0,0,1],
+    [1,1,1,0,1,0,1,0,1,1,1,0,1,0,1],
+    [1,4,0,0,1,0,1,0,0,0,0,0,1,0,1],
+    [1,1,1,0,1,0,1,1,1,1,1,0,1,0,1],
+    [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+    [1,0,1,0,1,0,1,1,1,1,1,0,0,0,1],
+    [1,0,1,0,1,0,0,0,0,0,1,0,1,0,1],
+    [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
+    [1,0,1,0,1,0,0,0,1,0,1,0,1,0,1],
+    [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
+    [1,0,1,1,1,1,1,1,1,0,1,0,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,3,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+]
+},
+{
+    wall:"walls2.png",
+    special:"frowner.png",
+    enemy:"smiler.png",
+    specialSolid: false,
+    enemyPower:"phase",
+    enemyStart:{x:11.5,y:1.5},
+    map:[
+    [1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,2,0,0,0,0,0,4,1,0,0,0,1],
+    [1,1,1,1,1,1,0,1,1,0,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,1],
+    [1,0,1,1,1,1,0,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,0,1,1,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,1],
+    [1,0,1,1,1,1,0,1,1,0,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,0,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,3,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1]
+]
+},
+{
+    wall:"walls2.png",
+    special:"frowner.png",
+    enemy:"smiler.png",
+    specialSolid: false,
+    enemyPower:"phase",
+    enemyStart:{x:8.5,y:2.5},
+    map:[
+    [1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,2,0,0,0,0,0,0,0,0,0,4,1],
+    [1,0,1,0,1,1,1,0,1,1,1,0,1],
+    [1,0,1,0,0,0,1,0,1,0,0,0,1],
+    [1,0,1,1,1,0,1,0,1,0,1,1,1],
+    [1,0,0,0,1,0,0,0,1,0,1,0,1],
+    [1,0,1,1,1,1,1,1,1,0,1,0,1],
+    [1,0,0,0,0,0,0,0,1,0,0,0,1],
+    [1,0,1,1,1,1,1,0,1,1,1,0,1],
+    [1,0,0,0,1,0,1,0,0,0,1,0,1],
+    [1,1,1,0,1,0,1,1,1,0,1,0,1],
+    [1,0,0,0,0,0,0,0,1,0,0,3,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1]
+]
 },
 {
     wall:"walls3.png",
@@ -150,7 +474,35 @@ const levels = [
     
 },
 {
-    wall:"walls4.png",
+    wall:"walls3.png",
+    enemy:"herobrine.png",
+    special:"craftingtable.png",
+    specialSolid: false,
+
+    enemyStart:{x:12.5,y:2.5},
+    map:[
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,2,0,0,0,0,0,0,0,0,0,4,0,0,1],
+    [1,0,0,0,1,1,1,0,1,1,1,0,0,0,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+    [1,0,1,1,0,1,1,0,0,0,1,1,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+    [1,1,1,0,0,0,1,1,0,0,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,0,0,1,0,0,0,0,0,1,1,1],
+    [1,0,0,0,0,0,1,0,1,0,0,0,0,0,1],
+    [1,1,1,0,0,0,1,0,1,0,1,1,1,0,1],
+    [1,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
+    [1,0,1,0,0,0,1,0,0,0,0,0,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,1,3,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+]
+    
+},
+
+
+{
+    wall:"walls4.jpg",
     enemy:"butcher.png",
     specialSolid: false,
     special:"skull.png",
@@ -167,7 +519,32 @@ const levels = [
     
 },
 {
-    wall:"walls5.png",
+    wall:"walls4.jpg",
+    enemy:"butcher.png",
+    specialSolid: false,
+    special:"skull.png",
+    enemyStart:{x:7.5,y:8.5},
+    map:[
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,2,1,0,0,1,0,0,0,0,0,1,0,0,1],
+    [1,0,1,0,0,1,1,1,0,0,0,1,0,0,1],
+    [1,0,1,0,0,0,0,0,0,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,1,1,0,1,1,0,1,0,0,1],
+    [1,0,0,0,0,1,0,0,0,1,0,1,1,0,1],
+    [1,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+    [1,0,0,0,0,1,1,0,1,1,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,1,1,1,1],
+    [1,4,0,0,0,0,0,0,0,0,0,0,0,3,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+]
+    
+},
+{
+    wall:"walls5.jpg",
     enemy:"obama.png",
     enemyStart:{x:8.5,y:2.5},
     map:[
@@ -182,7 +559,7 @@ const levels = [
     
 },
 {
-    wall:"walls.png",
+    wall:"walls.jpg",
     enemy:"partygoer.png",
     enemyStart:{x:13,y:3},
     enemyPower:"phase",
@@ -208,7 +585,7 @@ const levels = [
     
 },
 {
-    wall:"walls.png",
+    wall:"walls.jpg",
     enemy:"partygoer.png",
     specialSolid: false,
     special:"party.png",
@@ -236,7 +613,7 @@ const levels = [
     
 },
 {
-    wall:"walls.png",
+    wall:"walls.jpg",
     enemy:"partygoer.png",
     enemyStart:{x:18.5,y:1.5},
     enemyPower:"phase",
@@ -403,7 +780,7 @@ const levels = [
     
 },
 {
-    wall:"bookshelf.png",
+    wall:"bookshelf.jpg",
     enemy:"statue.png",
     enemyStart:{x:17.5,y:9.5},
     enemyPower:"watcher",
@@ -437,6 +814,33 @@ const levels = [
 
 
 ],
+
+    
+},
+{
+    wall:"bookshelf.jpg",
+    enemy:"statue.png",
+    enemyStart:{x:9.5,y:5.5},
+    enemyPower:"watcher",
+    specialSolid: false,
+    special:"desk.png",
+    map: [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,4,0,0,0,1,0,0,0,1,0,0,0,4,1],
+    [1,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+    [1,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,3,1],
+    [1,1,1,1,0,0,0,0,0,0,0,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,2,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,0,0,0,0,0,0,0,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+    [1,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+    [1,4,0,0,0,1,0,0,0,1,0,0,0,4,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+]
 
     
 },
@@ -476,15 +880,23 @@ const loreUnlocked = Array(levels.length).fill(false);
 const loreText = [
     "Level 1: The entity draws closer. Listening to the quake of your footsteps...",
     "Level 2: You get an eerie feeling. something or someone is watching.",
-    "Level 3: A mandela, deja vu, a place you've seen before.",
-    "Level 4: It is proud.",
-    "Level 5: Dreadful eyes stare.",
-    "Level 6 level FUN: lucky. The most safe level... :)",
-    "Level 7 level FUN: Traverse your way through the madness or encounter a deadly suprise...",
-    "Level 8 level FUN: encountering powerful entitys which can walk through walls and move quick if you look away...",
-    "Level 9 level FUN: the last stretch the exit door nearing closer and closer to the next level...",
-    "Level 10 RUN FOR YOUR LIFE: RUN!!!",
-    "Level 11 RUN FOR YOUR LIFE: Tons of entitys chase behind you every step feels like hell. the adreniline is wearing off. Hopefully I exit the level soon...",
+    "Level 3: Looped rooms make you go insane...",
+    "Level 4 The poolrooms: you found the next level... a claustrophic pool?",
+    "Level 5 The poolrooms: You make your way through the murky water.",
+    "Level 6 The poolrooms: A rather happy presence you sense",
+    "Level 7 The poolrooms: Dark entitys. Big grin. Sharp teeth. it glows...",
+    "Level 8 Minecraft: A forgotten memory of your childhood.",
+    "Level 9 Minecraft: A cube crafting bench. A man with white eyes. Trees with no leaves",
+    "Level 10 Cannibal lair: A butcher. Skulls and meat everywhere... are you his next meal?",
+    "Level 11 Cannibal lair: You barely escape the cannibal.",
+    "Level 12 Garys mod: OBUNGA",
+    "Level 13 level FUN: lucky. The most safe level... :)",
+    "Level 14 level FUN: encountering powerful entitys which can walk through walls and move quick if you look away...",
+    "Level 15 level FUN: the last stretch the exit door nearing closer and closer to the next level...",
+    "Level 16 RUN FOR YOUR LIFE: RUN!!!",
+    "Level 17 RUN FOR YOUR LIFE: Tons of entitys chase behind you every step feels like hell. the adreniline is wearing off. Hopefully I exit the level soon...",
+    "Level 18 the school libary: A Quiet compromise of the chase you had just been through. Something is off about that statue though.",
+    "Level 19 the school libary: The statue it moves...",
 
 
 ];
@@ -538,6 +950,31 @@ function loadLevel(levelIndex){
     jumpscareActive = false;
     playerDead = false;
 }// INPUT
+
+
+
+function rollItemSpawns() {
+
+items = [];
+
+for (let y = 0; y < map.length; y++) {
+    for (let x = 0; x < map[y].length; x++) {
+
+        if (map[y][x] === 6) {
+            items.push({
+                x: x + 0.5,
+                y: y + 0.5,
+                type: getRandomItem()
+            });
+        }
+    }
+}
+}
+
+
+
+
+
 // =======================
 const keys={};
 
@@ -616,98 +1053,185 @@ function updatePlayer(){
 
 if(jumpscareActive) return;
 
-const speed=0.05;
+// =========================
+// SAFETY CHECK (VERY IMPORTANT)
+// =========================
+if(!Number.isFinite(player.x) || !Number.isFinite(player.y)){
+    console.log("RESET PLAYER (NaN FIX)");
+    player.x = 1.5;
+    player.y = 1.5;
+    player.angle = 0;
+    return;
+}
 
-let dx=0;
-let dy=0;
+// =========================
+// SPEED + DIFFICULTY FIX
+// =========================
+const difficultyMult = {
+    easy: 1.8,
+    exploring: 1.5,
+    scratch: 1.3,
+    normal: 1,
+    hard: 0.95,
+    extreme: 0.9,
+    impossible: 0.85
+};
+
+const mult = difficultyMult[gameDifficulty] ?? 1;
+
+let speed =
+    (0.02 + (candyLevels > 0 ? 0.1 : 0)) * mult;
+
+const sprinting =
+    sprintHeld &&
+    (keys.w || keys.s) &&
+    !exhausted &&
+    stamina > 0;
+
+if(sprinting){
+
+    const specialLevel =
+        currentLevel === 15 ||
+        currentLevel === 16;
+
+    speed *= specialLevel ? 3 : 2;
+
+    stamina -= specialLevel ? 0.1 : STAMINA_DRAIN;
+
+    if(stamina <= 0){
+        stamina = 0;
+        exhausted = true;
+        speed = 0.02;
+    }
+
+} else {
+
+    if(!exhausted && stamina < 100){
+        stamina += STAMINA_REGEN;
+        if(stamina > 100) stamina = 100;
+    }
+}
+
+updateStaminaBar();
+
+// =========================
+// MOVEMENT
+// =========================
+let dx = 0;
+let dy = 0;
 
 if(keys.w){
-dx+=Math.cos(player.angle)*speed;
-dy+=Math.sin(player.angle)*speed;
+    dx += Math.cos(player.angle) * speed;
+    dy += Math.sin(player.angle) * speed;
 }
 
 if(keys.s){
-dx-=Math.cos(player.angle)*speed;
-dy-=Math.sin(player.angle)*speed;
+    dx -= Math.cos(player.angle) * speed;
+    dy -= Math.sin(player.angle) * speed;
 }
 
-if(keys.a) player.angle-=0.04;
-if(keys.d) player.angle+=0.04;
+if(keys.a) player.angle -= 0.04;
+if(keys.d) player.angle += 0.04;
 
-const nx=player.x+dx;
-const ny=player.y+dy;
+const nx = player.x + dx;
+const ny = player.y + dy;
 
-const tile=
-map[Math.floor(ny)]
-?.[Math.floor(nx)];
+// =========================
+// SAFE MAP CHECK
+// =========================
+const tileRow = map[Math.floor(ny)];
+const tile = tileRow?.[Math.floor(nx)];
 
-const blocked=
-tile===1||
-(tile===4&&specialSolid);
+const blocked =
+    tile === 1 ||
+    (tile === 4 && specialSolid);
 
-const moving=(keys.w||keys.s)&&!blocked;
-
-// HEAD BOB
+const moving = (keys.w || keys.s) && !blocked;
+// =========================
+// FOOTSTEP LOOP CONTROL
+// =========================
 if(moving){
+    sounds.walk.playbackRate = sprinting ? 1.6 : 1.0;
 
-bobTime+=0.18;
+    if(sounds.walk.paused){
+        sounds.walk.currentTime = 0;
+        sounds.walk.play();
 
-cameraBob=
-Math.sin(bobTime)*6;
-
-}else{
-
-cameraBob*=0.85;
-
+    }
+} else {
+    sounds.walk.pause();
+    sounds.walk.currentTime = 0;
+}
+// =========================
+// CAMERA BOB
+// =========================
+if(moving){
+    bobTime += 0.18;
+    cameraBob = Math.sin(bobTime) * 6;
+} else {
+    cameraBob *= 0.85;
 }
 
-// SWAY
-if(keys.a){
-swayTarget=-6;
-}
-else if(keys.d){
-swayTarget=6;
-}
-else{
-swayTarget=0;
-}
+// sway
+if(keys.a) swayTarget = -6;
+else if(keys.d) swayTarget = 6;
+else swayTarget = 0;
 
-sway+=(swayTarget-sway)*0.12;
+sway += (swayTarget - sway) * 0.12;
 
+// apply movement
 if(!blocked){
-
-player.x=nx;
-player.y=ny;
-
+    player.x = nx;
+    player.y = ny;
 }
 
-// EXIT
-if(map[Math.floor(player.y)][Math.floor(player.x)]===3){
+// =========================
+// ITEM PICKUP (SAFE FIXED VERSION)
+// =========================
+for(let i = items.length - 1; i >= 0; i--){
+    const item = items[i];
 
-if(currentLevel<levels.length-1){
+    const dx = item.x - player.x;
+    const dy = item.y - player.y;
 
-sounds.levelClear.currentTime=0;
-sounds.levelClear.play();
-
-loreUnlocked[currentLevel]=true;
-if(currentLevel + 1 === 0){
-
-}
-loadLevel(currentLevel+1);
-
-}
-
+    if(Math.hypot(dx, dy) < 0.6){
+        addItem(item.type);
+        items.splice(i, 1);
+    }
 }
 
+// =========================
+// EXIT CHECK (SAFE)
+// =========================
+const exRow = map[Math.floor(player.y)];
+const exTile = exRow?.[Math.floor(player.x)];
+
+if(exTile === 3){
+
+    if(currentLevel < levels.length - 1){
+
+        sounds.levelClear.currentTime = 0;
+        sounds.levelClear.play();
+
+        loreUnlocked[currentLevel] = true;
+
+        stamina = 100;
+        exhausted = false;
+
+        if(candyLevels > 0) candyLevels--;
+
+        loadLevel(currentLevel + 1);
+        rollItemSpawns();
+    }
+}
 }// =======================
-// ENEMY AI
-// =======================
 function triggerJumpscare(){
     jumpscareActive = true;
     jumpscareStart = Date.now();
 
     sounds.caught.currentTime = 0;
     sounds.caught.play().catch(()=>{});
+
 }
 
 
@@ -847,9 +1371,16 @@ if(enemy.stuckTime > 60){
         triggerJumpscare();
 
         setTimeout(() => {
-            jumpscareActive = false;
-            playerDead = false;
-            loadLevel(currentLevel);
+            setTimeout(() => {
+    jumpscareActive = false;
+    playerDead = false;
+
+    // ===== RESET STATS ON DEATH =====
+    stamina = 100;
+    exhausted = false;
+
+    loadLevel(currentLevel);
+}, 3000);
         }, 3000);
     }
 });
@@ -920,28 +1451,59 @@ texCoord*
 wallTexture.width
 );
 
+if(
+wallTexture.complete &&
+wallTexture.naturalWidth > 0
+){
+
 ctx.drawImage(
-
 wallTexture,
-
 texX,
 0,
 1,
 wallTexture.height,
-
 i*sliceWidth,
 canvas.height/2-wallHeight/2,
 sliceWidth+1,
 wallHeight
-
 );
 
-// DISTANCE FOG
-const fog =
-Math.min(
-corrected/9,
-0.95
+}else{
+
+ctx.fillStyle = "#888";
+
+ctx.fillRect(
+i*sliceWidth,
+canvas.height/2-wallHeight/2,
+sliceWidth+1,
+wallHeight
 );
+
+}
+
+const baseFog = Math.min(corrected / 9, 0.95);
+
+const dist = Math.max(corrected, 0.001);
+
+// smoother curve instead of linear jumpiness
+const fogFactor = dist / 8;
+
+// difficulty scaling (optional but stable)
+const difficultyFog = {
+    easy: 1,
+    exploring: 3,
+    scratch: 5,
+    normal: 10,
+    hard: 30,
+    extreme: 50,
+    impossible: 80
+};
+
+// smooth + consistent fog
+const fog = 1 - (1 / (1 + fogFactor * (difficultyFog[gameDifficulty] ?? 1)));
+
+// clamp
+const finalFog = Math.min(Math.max(fog, 0), 0.95);
 
 ctx.fillStyle=
 `rgba(0,0,0,${fog})`;
@@ -1032,7 +1594,65 @@ size
 
 });
 
-}// =======================
+}
+
+
+// =======================
+
+console.log("items:", items);
+
+function drawItems(rays) {
+    for (const item of items) {
+
+        const dx = item.x - player.x;
+        const dy = item.y - player.y;
+
+        const dist = Math.hypot(dx, dy);
+
+        let angle = Math.atan2(dy, dx) - player.angle;
+
+        // normalize angle
+        angle = Math.atan2(Math.sin(angle), Math.cos(angle));
+
+        if (Math.abs(angle) > player.fov / 2) continue;
+
+        const correctedDist = dist * Math.cos(angle);
+        if (correctedDist <= 0.01) continue;
+
+        const size = canvas.height / correctedDist;
+
+        const screenX =
+            (0.5 + angle / player.fov) * canvas.width;
+
+        const rayCenter = Math.floor(
+            (screenX / canvas.width) * rays.length
+        );
+
+        const spread = 4;
+        let visible = false;
+
+        for (let i = -spread; i <= spread; i++) {
+            const r = rayCenter + i;
+
+            if (r < 0 || r >= rays.length) continue;
+
+            if (correctedDist < rays[r].distance + 1.2) {
+                visible = true;
+                break;
+            }
+        }
+
+        if (visible) {
+            ctx.drawImage(
+                item.type.img,
+                screenX - size / 2,
+                canvas.height / 2 - size / 2,
+                size,
+                size
+            );
+        }
+    }
+}
 function drawExit(rays) {
     const tileSize = 1;
 
@@ -1099,7 +1719,7 @@ if(
     !hasSpecial ||
     !specialTexture.complete ||
     specialTexture.naturalWidth === 0
-) return; // ✅ OK because still inside function
+) return;
 
 for(let y=0;y<map.length;y++){
     for(let x=0;x<map[y].length;x++){
@@ -1112,32 +1732,46 @@ for(let y=0;y<map.length;y++){
         const dist = Math.sqrt(dx*dx+dy*dy);
 
         let angle = Math.atan2(dy,dx) - player.angle;
-        angle = ((angle+Math.PI)%(Math.PI*2)) - Math.PI;
+        angle = Math.atan2(Math.sin(angle), Math.cos(angle));
 
-        if(Math.abs(angle) >= player.fov/2) continue;
+        if(Math.abs(angle) > player.fov/2) continue;
+
+        const corrected = dist * Math.cos(angle);
+        if(corrected <= 0.01) continue;
+
+        const size = canvas.height / corrected;
 
         const screenX =
-            ((angle+player.fov/2)/player.fov) * canvas.width;
+            (0.5 + angle / player.fov) * canvas.width;
 
-        const rayIndex = Math.floor(screenX);
-
-        if(rayIndex < 0 || rayIndex >= rays.length) continue;
-
-        if(dist > rays[rayIndex].distance) continue;
-
-        const size = canvas.height / dist;
-
-        ctx.drawImage(
-            specialTexture,
-            screenX - size/2,
-            canvas.height/2 - size/2,
-            size,
-            size
+        const rayCenter = Math.floor(
+            (screenX / canvas.width) * rays.length
         );
+
+        let visible = false;
+
+        for(let i=-4;i<=4;i++){
+            const r = rayCenter + i;
+            if(r < 0 || r >= rays.length) continue;
+
+            if(corrected < rays[r].distance + 1.2){
+                visible = true;
+                break;
+            }
+        }
+
+        if(visible){
+            ctx.drawImage(
+                specialTexture,
+                screenX - size/2,
+                canvas.height/2 - size/2,
+                size,
+                size
+            );
+        }
     }
 }
 }
-
 
 function drawMenu(){
     ctx.fillStyle = "black";
@@ -1154,9 +1788,9 @@ function drawMenu(){
 ctx.fillText("CREDITS", canvas.width/2, 320);
 ctx.fillText("LORE", canvas.width/2, 390);
 ctx.fillText("SETTINGS", canvas.width/2, 460);
-
+ctx.fillText("DIFFICULTY", canvas.width/2, 530);
     ctx.font = "20px Arial";
-    ctx.fillText("Click anywhere", canvas.width/2, 500);
+    ctx.fillText("Click anywhere", canvas.width/2, 580);
 }
 
 function drawCredits(){
@@ -1177,7 +1811,40 @@ function drawCredits(){
 
 }
 
+
+window.addEventListener("keydown",(e)=>{
+
+if(gameState !== "lore")
+return;
+
+if(e.key === "ArrowDown"){
+    loreScroll += 40;
+    e.preventDefault();
+}
+
+if(e.key === "ArrowUp"){
+    loreScroll -= 40;
+    e.preventDefault();
+}
+
+});
+canvas.addEventListener("wheel",(e)=>{
+
+if(gameState !== "lore")
+return;
+
+loreScroll += e.deltaY;
+
+e.preventDefault();
+
+},{
+passive:false
+});
+
+let loreScroll = 0;
+
 function drawLore(){
+
     ctx.fillStyle = "black";
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
@@ -1189,17 +1856,74 @@ function drawLore(){
 
     ctx.font = "22px Arial";
 
-    let unlocked = loreText.filter((_,i)=>loreUnlocked[i]);
+    const unlocked =
+        loreText.filter((_,i)=>loreUnlocked[i]);
 
     if(unlocked.length === 0){
-        ctx.fillText("No lore unlocked yet...", canvas.width/2, 250);
-    } else {
-        unlocked.forEach((l,i)=>{
-            ctx.fillText(l, canvas.width/2, 250 + i*40);
-        });
+
+        ctx.fillText(
+            "No lore unlocked yet...",
+            canvas.width/2,
+            250
+        );
+
+        return;
     }
-}
-function drawSettings(){
+
+    const startY = 250;
+    const spacing = 40;
+
+    const contentHeight =
+        unlocked.length * spacing;
+
+    const maxScroll =
+        Math.max(
+            0,
+            contentHeight -
+            (canvas.height - startY - 50)
+        );
+
+    loreScroll =
+        Math.max(
+            0,
+            Math.min(
+                loreScroll,
+                maxScroll
+            )
+        );
+
+    unlocked.forEach((l,i)=>{
+
+        const y =
+            startY +
+            i*spacing -
+            loreScroll;
+
+        // only draw visible lines
+        if(
+            y > 180 &&
+            y < canvas.height
+        ){
+            ctx.fillText(
+                l,
+                canvas.width/2,
+                y
+            );
+        }
+
+    });
+
+    ctx.font = "16px Arial";
+
+    ctx.fillStyle =
+        "rgba(255,255,255,0.5)";
+
+    ctx.fillText(
+        "Scroll to read",
+        canvas.width/2,
+        canvas.height-30
+    );
+}function drawSettings(){
 
 ctx.fillStyle = "black";
 ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -1314,7 +2038,29 @@ canvas.width/2,
 
 }
 
+function drawDifficultyMenu(){
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+
+    ctx.font = "50px Arial";
+    ctx.fillText("DIFFICULTY", canvas.width/2, 100);
+
+    ctx.font = "28px Arial";
+
+    ctx.fillText("EZ PEASY", canvas.width/2, 200);
+    ctx.fillText("EXPLORING", canvas.width/2, 260);
+    ctx.fillText("'TIS JUST A SCRATCH", canvas.width/2, 320);
+    ctx.fillText("NORMAL", canvas.width/2, 380);
+    ctx.fillText("HARD", canvas.width/2, 440);
+    ctx.fillText("SUPER EXTREME", canvas.width/2, 500);
+    ctx.fillText("ABNORMALLY IMPOSSIBLE", canvas.width/2, 560);
+
+    ctx.font = "18px Arial";
+    ctx.fillText("Click to select, ESC to go back", canvas.width/2, 620);
+}
 //sigma//:D
 canvas.addEventListener("click",(e)=>{
     if(gameState !== "settings") return;
@@ -1344,10 +2090,29 @@ canvas.addEventListener("click",(e)=>{
         //  IMPORTANT: force refresh flashlight state
         flashlightOn = true;
     }
-});canvas.addEventListener("click", (e)=>{
-    if(gameState !== "menu") return;
+});
 
-    const y = e.clientY;
+canvas.addEventListener("click", (e)=>{
+
+const y = e.clientY;
+
+// ===== DIFFICULTY SCREEN =====
+if(gameState === "difficulty"){
+
+    if(y < 240) gameDifficulty = "easy";
+    else if(y < 300) gameDifficulty = "exploring";
+    else if(y < 360) gameDifficulty = "scratch";
+    else if(y < 420) gameDifficulty = "normal";
+    else if(y < 480) gameDifficulty = "hard";
+    else if(y < 540) gameDifficulty = "extreme";
+    else gameDifficulty = "impossible";
+
+    gameState = "menu";
+    return;
+}
+
+// ===== MAIN MENU =====
+if(gameState === "menu"){
 
     if(y >= 220 && y < 280){
         gameState = "playing";
@@ -1361,8 +2126,14 @@ canvas.addEventListener("click",(e)=>{
     else if(y >= 430 && y < 490){
         gameState = "settings";
     }
-});
+    else if(y >= 500 && y < 560){
+        gameState = "difficulty";
+    }
 
+    return;
+}
+
+});
 window.addEventListener("keydown", (e)=>{
     if(e.key === "Escape"){
         gameState = "menu";
@@ -1606,6 +2377,7 @@ flashlightOn=!flashlightOn;
 // LOOP
 // =======================
 function gameLoop(){
+    
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
     // MENU
@@ -1634,6 +2406,11 @@ if(gameState === "settings"){
     requestAnimationFrame(gameLoop);
     return;
 }
+if(gameState === "difficulty"){
+    drawDifficultyMenu();
+    requestAnimationFrame(gameLoop);
+    return;
+}
     // GAME
     if(gameState === "playing"){
     updatePlayer();
@@ -1648,7 +2425,7 @@ render3D(rays);
 drawSpecial(rays);
 
 drawExit(rays);
-
+drawItems(rays);
 drawSprites(rays);
 
 ctx.restore();
@@ -1666,7 +2443,9 @@ drawJumpscare();
 
     requestAnimationFrame(gameLoop);
 }
-loadLevel(0);
+loadLevel(currentLevel);
+rollItemSpawns();
+
 gameLoop();
 
 </script>
